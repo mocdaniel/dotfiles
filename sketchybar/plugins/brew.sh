@@ -8,6 +8,10 @@ readarray -t PACKAGES <<<$(brew outdated)
 COLOR=$RED
 COUNT=${#PACKAGES[@]}
 
+args+=(
+	--remove '/brew.listing\.*/'
+)
+
 case ${#PACKAGES[@]} in
 [3-5][0-9])
 	COLOR=$ORANGE
@@ -16,7 +20,19 @@ case ${#PACKAGES[@]} in
 	COLOR=$YELLOW
 	;;
 [1-9])
-	COLOR=$WHITE
+	if [[ "${PACKAGES[0]}" == "" ]]; then
+		COLOR=$GREEN
+		COUNT=􀆅
+		no_updates=(
+			label="No pending updates"
+			position="popup.brew"
+			drawing=on
+		)
+		args+=(--clone brew.listing.none brew.template --set brew.listing.none "${no_updates[@]}")
+		PACKAGES=()
+	else
+		COLOR=$WHITE
+	fi
 	;;
 0)
 	COLOR=$GREEN
@@ -24,10 +40,7 @@ case ${#PACKAGES[@]} in
 	;;
 esac
 
-args+=(
-	--set $NAME label="$COUNT" icon.color=$COLOR
-	--remove '/brew.listing\.*/'
-)
+args+=(--set $NAME label="$COUNT" icon.color=$COLOR)
 
 for package in "${PACKAGES[@]}"; do
 	listing=(
